@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Category, Product, Review
 from django.db.models import Avg
+from users.validators import validate_age
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,7 +17,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         if not value or not value.strip():
             raise serializers.ValidationError('text must not be empty')
         return value
-
 
 class ProductSerializer(serializers.ModelSerializer):
     reviews = ReviewSerializer(many=True, read_only=True)
@@ -41,6 +41,10 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('price must be greater than 0')
         return value
 
+    def validate(self, data):
+        user = self.context['request'].user
+        validate_age(user.birthdate)
+        return data
 
 class CategorySerializer(serializers.ModelSerializer):
     products_count = serializers.IntegerField(read_only=True)

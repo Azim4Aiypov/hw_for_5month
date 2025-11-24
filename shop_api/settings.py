@@ -1,16 +1,14 @@
 import os
 from pathlib import Path
-from dotenv import load_dotenv  
+from dotenv import load_dotenv
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'your-secret-key-here'
-
-DEBUG = True
-
-ALLOWED_HOSTS = []
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -23,8 +21,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
 
-    'product',
     'users',
+    'product',
 ]
 
 MIDDLEWARE = [
@@ -56,20 +54,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'shop_api.wsgi.application'
-import os
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'shop_db'),
-        'USER': os.getenv('DB_USER', 'shop_user'),
-        'PASSWORD': os.getenv('DB_PASSWORD', '1234'),
+        'NAME': os.getenv('POSTGRES_DB', 'shop_api'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres'),
         'HOST': os.getenv('DB_HOST', 'db'),
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
-
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
@@ -82,9 +77,11 @@ LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
+
 STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'users.User'
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -94,3 +91,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 }
+
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+REDIS_DB = int(os.getenv('REDIS_DB', 0))
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)

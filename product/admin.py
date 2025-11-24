@@ -5,11 +5,9 @@ from .models import Category, Product, Review
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
 
-
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'price', 'category')
-
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
