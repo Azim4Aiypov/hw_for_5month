@@ -1,4 +1,4 @@
-
+#!/bin/sh
 set -e
 
 echo "⏳ Ждём базу данных..."
@@ -8,9 +8,18 @@ until nc -z "$POSTGRES_HOST" "$POSTGRES_PORT"; do
 done
 echo "✅ База данных доступна!"
 
-python manage.py migrate --noinput
+echo "⏳ Ждём Redis..."
+until nc -z "$REDIS_HOST" "$REDIS_PORT"; do
+  echo "Redis недоступен - спим..."
+  sleep 1
+done
+echo "✅ Redis доступен!"
 
-python manage.py collectstatic --noinput || true
+if [ "$1" = "gunicorn" ]; then
+    echo "🚀 Применяем миграции и собираем статику..."
+    python manage.py migrate --noinput
+    python manage.py collectstatic --noinput || true
+fi
 
-echo "🚀 Запускаем сервер..."
+echo "🚀 Запускаем сервис: $@"
 exec "$@"

@@ -1,11 +1,11 @@
-version: '3.9'
+version: "3.9"
 
 services:
   web:
     build: .
-    command: /code/entrypoint.sh
+    command: /entrypoint.sh gunicorn shop_api.wsgi:application --bind 0.0.0.0:8000
     volumes:
-      - .:/code
+      - .:/app
     ports:
       - "8000:8000"
     env_file:
@@ -33,25 +33,27 @@ services:
 
   celery:
     build: .
-    command: celery -A shop_api worker -l info
+    command: /entrypoint.sh celery -A shop_api worker -l info
     volumes:
-      - .:/code
+      - .:/app
     env_file:
       - .env
     depends_on:
       - web
       - redis
+    restart: always
 
   celery-beat:
     build: .
-    command: celery -A shop_api beat -l info
+    command: /entrypoint.sh celery -A shop_api beat -l info
     volumes:
-      - .:/code
+      - .:/app
     env_file:
       - .env
     depends_on:
       - web
       - redis
+    restart: always
 
   nginx:
     image: nginx:latest
@@ -61,3 +63,4 @@ services:
       - ./nginx:/etc/nginx/conf.d
     depends_on:
       - web
+    restart: always
