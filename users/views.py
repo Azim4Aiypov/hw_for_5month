@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
 from .serializers import UserRegisterSerializer, UserConfirmSerializer, UserLoginSerializer
+from utils.confirmation import set_confirmation_code, get_confirmation_code, delete_confirmation_code
 
 User = get_user_model()
 
@@ -27,13 +28,7 @@ class UserRegisterView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = serializer.save(is_active=False)
-        username = user.username
-
-        if redis_client.get(username):
-            return
-
-        code = str(random.randint(100000, 999999))
-        redis_client.setex(username, 300, code)
+        code = set_confirmation_code(user.id)
         print("CONFIRM CODE:", code)
 
 
@@ -45,10 +40,11 @@ class UserConfirmView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        username = serializer.validated_data["username"]
-        code = serializer.validated_data["code"]
+        email = serializer.validated_data["email"]
+        code = serializer.validated_data["confirmation_code"]
 
-        saved_code = redis_client.get(username)
+        user = User.objects.get(email=email)
+        saved_code = get_confirmation_code(user.id)
 
         if not saved_code:
             return Response({"detail": "Code expired or not found"}, status=status.HTTP_400_BAD_REQUEST)
@@ -56,9 +52,7 @@ class UserConfirmView(generics.GenericAPIView):
         if saved_code != code:
             return Response({"detail": "Invalid code"}, status=status.HTTP_400_BAD_REQUEST)
 
-        redis_client.delete(username)
-
-        user = User.objects.get(username=username)
+        delete_confirmation_code(user.id)
         user.is_active = True
         user.is_confirmed = True
         user.save()

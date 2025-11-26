@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+POSTGRES_HOST=${DB_HOST}
+POSTGRES_PORT=${DB_PORT}
+
 echo "⏳ Ждём базу данных..."
 until nc -z "$POSTGRES_HOST" "$POSTGRES_PORT"; do
   echo "База данных недоступна - спим..."
